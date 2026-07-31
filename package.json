@@ -1,0 +1,36 @@
+{
+  "name": "polza-companies",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:import": "tsx scripts/import.ts all",
+    "db:import:json": "tsx scripts/import.ts json",
+    "db:import:review": "tsx scripts/import.ts review",
+    "db:report": "tsx scripts/report.ts"
+  },
+  "dependencies": {
+    "csv-parse": "^6.1.0",
+    "next": "^15.4.5",
+    "pg": "^8.16.3",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@types/node": "^24.1.0",
+    "@types/pg": "^8.15.5",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "eslint": "^9.32.0",
+    "eslint-config-next": "^15.4.5",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
