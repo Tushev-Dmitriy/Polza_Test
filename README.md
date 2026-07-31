@@ -26,18 +26,44 @@ PostgreSQL, обработка дублей и аномалий, аналити�
 - Модульные тесты нормализации и валидации.
 - Подробный разбор входных данных в [`ANOMALIES.md`](ANOMALIES.md).
 
-## Быстрый запуск
+## Быстрый запуск — одна команда
 
-Понадобятся Docker Desktop и Node.js 20+.
+Понадобится только Docker Desktop. Node.js, pnpm и локальный PostgreSQL для
+проверки не нужны:
 
 ```bash
-docker compose up -d --wait
+docker compose up --build -d --wait
+```
+
+Команда поднимает PostgreSQL, ждёт его готовности, применяет `schema.sql`,
+идемпотентно импортирует JSON и CSV, затем запускает production-сборку Next.js.
+После успешного healthcheck открыть
+[http://localhost:3000/companies](http://localhost:3000/companies).
+
+Посмотреть состояние и журнал автоматического импорта:
+
+```bash
+docker compose ps
+docker compose logs web
+```
+
+Остановить проект:
+
+```bash
+docker compose down
+```
+
+## Локальная разработка без контейнера приложения
+
+Если нужно менять код с hot reload, оставьте в Docker только PostgreSQL:
+
+```bash
+docker compose up -d postgres
 pnpm install
+pnpm db:migrate
 pnpm db:import
 pnpm dev
 ```
-
-Открыть: [http://localhost:3000/companies](http://localhost:3000/companies).
 
 Если используется npm:
 
@@ -60,6 +86,7 @@ postgresql://polza:polza@localhost:5432/polza
 
 | Команда | Назначение |
 |---|---|
+| `pnpm db:migrate` | Идемпотентно применить схему PostgreSQL |
 | `pnpm db:import` | Последовательно загрузить JSON и CSV |
 | `pnpm db:import:json` | Загрузить только `page_*.json` |
 | `pnpm db:import:review` | Загрузить только `review.csv` |
@@ -86,8 +113,7 @@ Get-Content -Raw sql/queries.sql |
 
 ```bash
 docker compose down -v
-docker compose up -d --wait
-pnpm db:import
+docker compose up --build -d --wait
 ```
 
 ## Результат контрольного импорта

@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "db:migrate": "tsx scripts/migrate.ts",
     "db:import": "tsx scripts/import.ts all",
     "db:import:json": "tsx scripts/import.ts json",
     "db:import:review": "tsx scripts/import.ts review",
