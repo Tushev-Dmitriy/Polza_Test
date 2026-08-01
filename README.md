@@ -10,7 +10,7 @@ PostgreSQL, обработка дублей и аномалий, аналити�
 ## Что реализовано
 
 - Загрузка всех 20 JSON-страниц и `review.csv`.
-- PostgreSQL 17 в Docker Compose с healthcheck и автоматическим применением схемы.
+- Next.js и PostgreSQL в одном Docker-контейнере с единым healthcheck.
 - Идемпотентный импорт: повторный запуск обновляет существующие компании, а не
   создаёт копии.
 - Дедупликация по исходному `id` и SHA-256-ключу из нормализованных
@@ -35,8 +35,10 @@ PostgreSQL, обработка дублей и аномалий, аналити�
 docker compose up --build -d --wait
 ```
 
-Команда поднимает PostgreSQL, ждёт его готовности, применяет `schema.sql`,
-идемпотентно импортирует JSON и CSV, затем запускает production-сборку Next.js.
+Команда собирает и запускает один контейнер. Внутри него стартует PostgreSQL,
+применяется `schema.sql`, идемпотентно импортируются JSON и CSV, после чего
+запускается production-сборка Next.js. База сохраняется в Docker volume
+`company_data`.
 После успешного healthcheck открыть
 [http://localhost:3000/companies](http://localhost:3000/companies).
 
@@ -44,7 +46,7 @@ docker compose up --build -d --wait
 
 ```bash
 docker compose ps
-docker compose logs web
+docker compose logs app
 ```
 
 Остановить проект:
@@ -53,12 +55,12 @@ docker compose logs web
 docker compose down
 ```
 
-## Локальная разработка без контейнера приложения
+## Локальная разработка
 
-Если нужно менять код с hot reload, оставьте в Docker только PostgreSQL:
+Для hot reload понадобится Node.js 20+ и отдельный PostgreSQL, доступный по
+`DATABASE_URL`:
 
 ```bash
-docker compose up -d postgres
 pnpm install
 pnpm db:migrate
 pnpm db:import
@@ -73,7 +75,7 @@ npm run db:import
 npm run dev
 ```
 
-Значение подключения по умолчанию уже совпадает с Docker Compose:
+Значение подключения по умолчанию для локальной разработки:
 
 ```text
 postgresql://polza:polza@localhost:5432/polza
@@ -96,17 +98,17 @@ postgresql://polza:polza@localhost:5432/polza
 | `pnpm lint` | Запустить ESLint |
 | `pnpm build` | Собрать production-версию |
 
-Требуемые SQL-запросы:
+Требуемые SQL-запросы внутри единственного контейнера:
 
 ```bash
-docker compose exec -T postgres psql -U polza -d polza -f /dev/stdin < sql/queries.sql
+docker compose exec -T app psql -U postgres -d postgres -f /dev/stdin < sql/queries.sql
 ```
 
 В PowerShell:
 
 ```powershell
 Get-Content -Raw sql/queries.sql |
-  docker compose exec -T postgres psql -U polza -d polza
+  docker compose exec -T app psql -U postgres -d postgres
 ```
 
 Полный сброс локальной базы:
@@ -173,7 +175,9 @@ sql/schema.sql        схема, ограничения и индексы
 sql/queries.sql       три аналитических запроса из задания
 tests/                модульные тесты
 ANOMALIES.md          отчёт по проблемам review.csv
-docker-compose.yml    локальный PostgreSQL
+Dockerfile            единый образ Next.js + PostgreSQL
+docker-entrypoint.sh  запуск БД, импорта и веб-приложения
+docker-compose.yml    запуск контейнера и volume одной командой
 ```
 
 ## Нюанс исходного ТЗ

@@ -1,36 +1,18 @@
 services:
-  postgres:
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_DB: polza
-      POSTGRES_USER: polza
-      POSTGRES_PASSWORD: polza
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./sql/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U polza -d polza"]
-      interval: 2s
-      timeout: 3s
-      retries: 15
-    restart: unless-stopped
-
-  web:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql://polza:polza@postgres:5432/polza
+      DATABASE_URL: postgresql://postgres@127.0.0.1:5432/postgres
       NODE_ENV: production
       HOSTNAME: 0.0.0.0
       PORT: 3000
+      PGDATA: /var/lib/postgresql/data
     ports:
       - "3000:3000"
-    depends_on:
-      postgres:
-        condition: service_healthy
+    volumes:
+      - company_data:/var/lib/postgresql/data
     healthcheck:
       test:
         [
@@ -41,9 +23,9 @@ services:
         ]
       interval: 5s
       timeout: 3s
-      retries: 12
-      start_period: 15s
+      retries: 18
+      start_period: 30s
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  company_data:
